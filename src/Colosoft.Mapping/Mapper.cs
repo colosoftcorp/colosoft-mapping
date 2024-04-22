@@ -3,12 +3,13 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 
 namespace Colosoft.Mapping
 {
-    public class Mapper<TSource, TTarget> : IMapperContextSupport<TSource, TTarget>, IMappingContextSupport
+    public partial class Mapper<TSource, TTarget> : IMapperContextSupport<TSource, TTarget>, IMappingContextSupport
     {
         private readonly List<IPropertyMap<TSource, TTarget>> properties = new List<IPropertyMap<TSource, TTarget>>();
 
@@ -104,6 +105,227 @@ namespace Colosoft.Mapping
             var getter = sourceProperty.Compile();
 
             var propertyMap = new PropertyMap<TPropertyValue, TContext>(sourceMember.Name, getter, setter);
+            this.properties.Add(propertyMap);
+            return this;
+        }
+
+        public Mapper<TSource, TTarget> Map<TSourceItem, TTargetItem, TKey>(
+            Expression<Func<TSource, IEnumerable<TSourceItem>>> sourceProperty,
+            Func<TSourceItem, TKey> sourceKeySelector,
+            Expression<Func<TTarget, ICollection<TTargetItem>>> targetProperty,
+            Func<TTargetItem, TKey> targetKeySelector,
+            Func<TSourceItem, TTargetItem> targetFactory,
+            Action<TSourceItem, TTargetItem> update,
+            IEqualityComparer<TKey> keyComparer = null)
+        {
+            if (sourceProperty is null)
+            {
+                throw new ArgumentNullException(nameof(sourceProperty));
+            }
+
+            if (sourceKeySelector is null)
+            {
+                throw new ArgumentNullException(nameof(sourceKeySelector));
+            }
+
+            if (targetProperty is null)
+            {
+                throw new ArgumentNullException(nameof(targetProperty));
+            }
+
+            if (targetKeySelector is null)
+            {
+                throw new ArgumentNullException(nameof(targetKeySelector));
+            }
+
+            if (targetFactory is null)
+            {
+                throw new ArgumentNullException(nameof(targetFactory));
+            }
+
+            if (update is null)
+            {
+                throw new ArgumentNullException(nameof(update));
+            }
+
+            return this.Map(
+                sourceProperty,
+                sourceKeySelector,
+                targetProperty,
+                targetKeySelector,
+                (f, _) => Task.FromResult(targetFactory(f)),
+                (x, y, _) =>
+                {
+                    update(x, y);
+                    return Task.CompletedTask;
+                },
+                keyComparer);
+        }
+
+        public Mapper<TSource, TTarget> Map<TSourceItem, TTargetItem, TKey>(
+            Expression<Func<TSource, IEnumerable<TSourceItem>>> sourceProperty,
+            Func<TSourceItem, TKey> sourceKeySelector,
+            Expression<Func<TTarget, ICollection<TTargetItem>>> targetProperty,
+            Func<TTargetItem, TKey> targetKeySelector,
+            Func<TSourceItem, TTargetItem> targetFactory,
+            Func<TSourceItem, TTargetItem, CancellationToken, Task> update,
+            IEqualityComparer<TKey> keyComparer = null)
+        {
+            if (sourceProperty is null)
+            {
+                throw new ArgumentNullException(nameof(sourceProperty));
+            }
+
+            if (sourceKeySelector is null)
+            {
+                throw new ArgumentNullException(nameof(sourceKeySelector));
+            }
+
+            if (targetProperty is null)
+            {
+                throw new ArgumentNullException(nameof(targetProperty));
+            }
+
+            if (targetKeySelector is null)
+            {
+                throw new ArgumentNullException(nameof(targetKeySelector));
+            }
+
+            if (targetFactory is null)
+            {
+                throw new ArgumentNullException(nameof(targetFactory));
+            }
+
+            if (update is null)
+            {
+                throw new ArgumentNullException(nameof(update));
+            }
+
+            return this.Map(
+                sourceProperty,
+                sourceKeySelector,
+                targetProperty,
+                targetKeySelector,
+                (f, _) => Task.FromResult(targetFactory(f)),
+                update,
+                keyComparer);
+        }
+
+        public Mapper<TSource, TTarget> Map<TSourceItem, TTargetItem, TKey>(
+            Expression<Func<TSource, IEnumerable<TSourceItem>>> sourceProperty,
+            Func<TSourceItem, TKey> sourceKeySelector,
+            Expression<Func<TTarget, ICollection<TTargetItem>>> targetProperty,
+            Func<TTargetItem, TKey> targetKeySelector,
+            Func<CancellationToken, Task<TTargetItem>> targetFactory,
+            Func<TSourceItem, TTargetItem, CancellationToken, Task> update,
+            IEqualityComparer<TKey> keyComparer = null)
+        {
+            if (sourceProperty is null)
+            {
+                throw new ArgumentNullException(nameof(sourceProperty));
+            }
+
+            if (sourceKeySelector is null)
+            {
+                throw new ArgumentNullException(nameof(sourceKeySelector));
+            }
+
+            if (targetProperty is null)
+            {
+                throw new ArgumentNullException(nameof(targetProperty));
+            }
+
+            if (targetKeySelector is null)
+            {
+                throw new ArgumentNullException(nameof(targetKeySelector));
+            }
+
+            if (targetFactory is null)
+            {
+                throw new ArgumentNullException(nameof(targetFactory));
+            }
+
+            if (update is null)
+            {
+                throw new ArgumentNullException(nameof(update));
+            }
+
+            return this.Map(
+                sourceProperty,
+                sourceKeySelector,
+                targetProperty,
+                targetKeySelector,
+                (_, cancellationToken) => targetFactory(cancellationToken),
+                update,
+                keyComparer);
+        }
+
+        public Mapper<TSource, TTarget> Map<TSourceItem, TTargetItem, TKey>(
+            Expression<Func<TSource, IEnumerable<TSourceItem>>> sourceProperty,
+            Func<TSourceItem, TKey> sourceKeySelector,
+            Expression<Func<TTarget, ICollection<TTargetItem>>> targetProperty,
+            Func<TTargetItem, TKey> targetKeySelector,
+            Func<TSourceItem, CancellationToken, Task<TTargetItem>> targetFactory,
+            Func<TSourceItem, TTargetItem, CancellationToken, Task> update,
+            IEqualityComparer<TKey> keyComparer = null)
+        {
+            if (sourceProperty == null)
+            {
+                throw new ArgumentNullException(nameof(sourceProperty));
+            }
+
+            if (sourceKeySelector is null)
+            {
+                throw new ArgumentNullException(nameof(sourceKeySelector));
+            }
+
+            if (targetProperty is null)
+            {
+                throw new ArgumentNullException(nameof(targetProperty));
+            }
+
+            if (targetKeySelector is null)
+            {
+                throw new ArgumentNullException(nameof(targetKeySelector));
+            }
+
+            if (targetFactory is null)
+            {
+                throw new ArgumentNullException(nameof(targetFactory));
+            }
+
+            if (update is null)
+            {
+                throw new ArgumentNullException(nameof(update));
+            }
+
+            var sourceMember = sourceProperty.GetMember();
+
+            if (sourceMember == null)
+            {
+                throw new ArgumentException("Property undefined", nameof(sourceProperty));
+            }
+
+            var targetMember = targetProperty.GetMember();
+
+            if (targetMember == null)
+            {
+                throw new ArgumentException("Property undefined", nameof(targetProperty));
+            }
+
+            var sourceSelector = sourceProperty.Compile();
+            var targetSelector = targetProperty.Compile();
+
+            var propertyMap = new PropertyMapMerge<TSourceItem, TTargetItem, TKey>(
+                sourceMember.Name,
+                sourceSelector,
+                sourceKeySelector,
+                targetSelector,
+                targetKeySelector,
+                targetFactory,
+                update,
+                keyComparer);
+
             this.properties.Add(propertyMap);
             return this;
         }
@@ -207,129 +429,5 @@ namespace Colosoft.Mapping
             this.Apply((TSource)source, (TTarget)target, context, cancellationToken);
 
         protected virtual IEnumerable<IPropertyMap<TSource, TTarget>> GetChangedProperties(TSource source) => this.properties;
-
-        private sealed class PropertyMap<TPropertyValue, TContext> : IPropertyMapContextSupport<TSource, TTarget>
-            where TContext : IMappingContext
-        {
-            private readonly Func<TSource, TPropertyValue> getter;
-            private readonly Action<TTarget, TPropertyValue, TContext> setter;
-
-            public string PropertyName { get; }
-
-            public PropertyMap(
-                string propertyName,
-                Func<TSource, TPropertyValue> getter,
-                Action<TTarget, TPropertyValue, TContext> setter)
-            {
-                this.PropertyName = propertyName;
-                this.getter = getter;
-                this.setter = setter;
-            }
-
-            public void Apply(TSource source, TTarget target)
-            {
-                var value = this.getter(source);
-                this.setter(target, value, default(TContext));
-            }
-
-            public void Apply(TSource source, TTarget target, IMappingContext context)
-            {
-                var value = this.getter(source);
-                this.setter(target, value, (TContext)context);
-            }
-        }
-
-        private sealed class PropertyMap<TPropertyValue> : IPropertyMapContextSupport<TSource, TTarget>
-        {
-            private readonly Func<TSource, TPropertyValue> getter;
-            private readonly Action<TTarget, TPropertyValue> setter;
-
-            public string PropertyName { get; }
-
-            public PropertyMap(
-                string propertyName,
-                Func<TSource, TPropertyValue> getter,
-                Action<TTarget, TPropertyValue> setter)
-            {
-                this.PropertyName = propertyName;
-                this.getter = getter;
-                this.setter = setter;
-            }
-
-            public void Apply(TSource source, TTarget target) =>
-                this.Apply(source, target, null);
-
-            public void Apply(TSource source, TTarget target, IMappingContext context)
-            {
-                var value = this.getter(source);
-                this.setter(target, value);
-            }
-        }
-
-        private sealed class PropertyMapAsync<TPropertyValue> : IPropertyMapAsync<TSource, TTarget>
-        {
-            private readonly Func<TSource, TPropertyValue> getter;
-            private readonly Func<TTarget, TPropertyValue, CancellationToken, Task> setter;
-
-            public string PropertyName { get; }
-
-            public PropertyMapAsync(
-                string propertyName,
-                Func<TSource, TPropertyValue> getter,
-                Func<TTarget, TPropertyValue, CancellationToken, Task> setter)
-            {
-                this.PropertyName = propertyName;
-                this.getter = getter;
-                this.setter = setter;
-            }
-
-            public void Apply(TSource source, TTarget target)
-            {
-                Task.Run(() => this.ApplyAsync(source, target, null, default)).Wait();
-            }
-
-            public async Task ApplyAsync(TSource source, TTarget target, IMappingContext context, CancellationToken cancellationToken)
-            {
-                var value = this.getter(source);
-                await this.setter(target, value, cancellationToken);
-            }
-        }
-
-        private sealed class PropertyMapAsync<TPropertyValue, TContext> : IPropertyMapContextSupport<TSource, TTarget>
-            where TContext : IMappingContext
-        {
-            private readonly Func<TSource, TPropertyValue> getter;
-            private readonly Func<TTarget, TPropertyValue, TContext, CancellationToken, Task> setter;
-
-            public string PropertyName { get; }
-
-            public PropertyMapAsync(
-                string propertyName,
-                Func<TSource, TPropertyValue> getter,
-                Func<TTarget, TPropertyValue, TContext, CancellationToken, Task> setter)
-            {
-                this.PropertyName = propertyName;
-                this.getter = getter;
-                this.setter = setter;
-            }
-
-            public void Apply(TSource source, TTarget target) =>
-                Task.Run(() => this.ApplyAsync(source, target, default)).Wait();
-
-            public void Apply(TSource source, TTarget target, IMappingContext context) =>
-                Task.Run(() => this.ApplyAsync(source, target, context, default)).Wait();
-
-            public async Task ApplyAsync(TSource source, TTarget target, CancellationToken cancellationToken)
-            {
-                var value = this.getter(source);
-                await this.setter(target, value, default(TContext), cancellationToken);
-            }
-
-            public async Task ApplyAsync(TSource source, TTarget target, IMappingContext context, CancellationToken cancellationToken)
-            {
-                var value = this.getter(source);
-                await this.setter(target, value, (TContext)context, cancellationToken);
-            }
-        }
     }
 }
